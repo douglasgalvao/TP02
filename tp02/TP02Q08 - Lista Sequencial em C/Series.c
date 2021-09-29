@@ -286,7 +286,7 @@ int tratamentoNumEpisodes(char **html)
 char *Concatenation(char *a)
 {
     char *b = (char *)calloc(50, sizeof(char));
-    strcpy(b, "../series/");
+    strcpy(b, "/tmp/series/");
     strcat(b, a);
     return b;
 }
@@ -317,15 +317,6 @@ char **lerHtml(char *caminho)
     return html;
 }
 
-Series **Alocador_de_Series(Series **series, int tamanho)
-{
-    series = (Series **)calloc(tamanho, sizeof(Series *));
-    for (int i = 0; i < tamanho; i++)
-    {
-        series[i] = (Series *)calloc(1, sizeof(Series));
-    }
-    return series;
-}
 // funçao que quando chamada vai setar toda a struct;
 Series *ler(char *caminho)
 {
@@ -385,7 +376,8 @@ Lista inserir_Serie_Inicio(Lista list, Series *serie)
         list.series[i] = list.series[i - 1];
     }
     list.series[0] = serie;
-    list.added++;
+    list.added = list.added + 1;
+    return list;
 }
 
 Lista inserir_Serie_Fim(Lista list, Series *serie)
@@ -395,8 +387,7 @@ Lista inserir_Serie_Fim(Lista list, Series *serie)
         printf("Error");
         system("pause");
     }
-    list.series[list.added] = serie;
-    list.added++;
+    list.series[list.added++] = serie;
     return list;
 }
 
@@ -412,11 +403,11 @@ Lista inserir(Lista list, Series *serie, int pos)
         list.series[i] = list.series[i - 1];
     }
     list.series[pos] = serie;
-    list.added++;
+    list.added = list.added + 1;
     return list;
 }
 
-Series *remover_Series_Inicio(Lista list)
+Lista remover_Series_Inicio(Lista list)
 {
     if (list.added == 0)
     {
@@ -429,10 +420,11 @@ Series *remover_Series_Inicio(Lista list)
     {
         list.series[i] = list.series[i + 1];
     }
-    return resp;
+    printf("(R) %s\n", resp->nome);
+    return list;
 }
 
-Series *remover_Series_Fim(Lista list)
+Lista remover_Series_Fim(Lista list)
 {
     if (list.added == 0)
     {
@@ -440,10 +432,11 @@ Series *remover_Series_Fim(Lista list)
         system("pause");
     }
     list.added = list.added - 1;
-    return list.series[list.added];
+    printf("(R) %s\n", list.series[list.added]->nome);
+    return list;
 }
 
-Series *remover(Lista list, int pos)
+Lista remover(Lista list, int pos)
 {
     if (list.added == 0 || pos < 0 || pos > list.added)
     {
@@ -451,17 +444,18 @@ Series *remover(Lista list, int pos)
         system("pause");
     }
     Series *resp = list.series[pos];
-    list.added = list.added - 1;
     for (int i = pos; i < list.added; i++)
     {
         list.series[i] = list.series[i + 1];
     }
-    return resp;
+    list.added = list.added - 1;
+    printf("(R) %s\n", resp->nome);
+    return list;
 }
 
 void imprimirStruct(Series *a)
 {
-    printf("%s %s %s %s %s %s %s %i %i\n",
+    printf("%s %s %s %s %s %s %s %i %i \n",
            getNome(a),
            getFormato(a),
            getDuracao(a),
@@ -483,7 +477,6 @@ void imprimir_Lista(Lista list)
 
 Lista tratar_Operacoes(char **Entradas2, Lista list, int total_de_Operacoes)
 {
-    Series **series_Removeds = Alocador_de_Series(series_Removeds, 9);
     int countRemoved = 0;
     for (int i = 0; i < total_de_Operacoes; i++)
     {
@@ -526,13 +519,11 @@ Lista tratar_Operacoes(char **Entradas2, Lista list, int total_de_Operacoes)
         }
         else if (Entradas2[i][0] == 'R' && Entradas2[i][1] == 'I')
         {
-            series_Removeds[countRemoved++] = remover_Series_Inicio(list);
-            printf("(R) %s\n", series_Removeds[countRemoved - 1]->nome);
+            list = remover_Series_Inicio(list);
         }
         else if (Entradas2[i][0] == 'R' && Entradas2[i][1] == 'F')
         {
-            series_Removeds[countRemoved++] = remover_Series_Fim(list);
-            printf("(R) %s\n", series_Removeds[countRemoved - 1]->nome);
+            list = remover_Series_Fim(list);
         }
         else if (Entradas2[i][0] == 'R' && Entradas2[i][1] == '*')
         {
@@ -540,8 +531,8 @@ Lista tratar_Operacoes(char **Entradas2, Lista list, int total_de_Operacoes)
             {
                 espaco_Auxiliar[countAux++] = Entradas2[i][j];
             }
-            series_Removeds[countRemoved++] = remover(list, atoi(espaco_Auxiliar));
-            printf("(R) %s\n", series_Removeds[countRemoved - 1]->nome);
+            list = remover(list, atoi(espaco_Auxiliar));
+            free(espaco_Auxiliar);
         }
     }
     return list;
@@ -565,7 +556,7 @@ int main()
     entradas[i][strlen(entradas[i]) - 1] = '\0';
     while (!isFim(entradas[i]))
     {
-        strcpy(newlines[i], "../series/");
+        strcpy(newlines[i], "/tmp/series/");
         strcat(newlines[i], entradas[i]);
         i++;
         fgets(entradas[i], 50, stdin);
@@ -575,10 +566,10 @@ int main()
     scanf("%i", &numeroInteracao);
     tamanho = i + numeroInteracao;
     list = Inicia_Lista(list, tamanho);
-    /*for (i = 0; i < tamanho - numeroInteracao + 1; i++)
+    for (i = 0; i < tamanho - numeroInteracao + 1; i++)
     {
         list = inserir_Serie_Fim(list, ler(newlines[i]));
-    }*/
+    }
     fgets(entradas[tamanho - numeroInteracao], 50, stdin);
     for (i = 0; i < numeroInteracao; i++)
     {
@@ -586,6 +577,12 @@ int main()
     }
     list = tratar_Operacoes(entradas2, list, numeroInteracao);
     imprimir_Lista(list);
+    for (i = 0; i < 50; i++)
+    {
+        free(entradas[i]);
+        free(entradas2[i]);
+        free(newlines[i]);
+    }
     return 0;
 }
 
